@@ -43,6 +43,16 @@ app.get('/', (req, res) => {
   res.send('Hello World!')
 })
 
+app.get("/expectedTime", async (req, res) => {
+  let {origin, destination, key} = req.query
+  origin = JSON.parse(origin)
+  destination = JSON.parse(destination)
+  const response = await fetch(`https://maps.googleapis.com/maps/api/distancematrix/json?&origins=${origin.lat},${origin.lng}&destinations=${destination.lat},${destination.lng}&key=${key}`)
+  const data = await response.json()
+  return res.status(200).json(data)
+
+})
+
 app.post("/upload", (req, res)=> {
   upload(req, res, function(err) {
     if (err instanceof multer.MulterError) {
@@ -63,6 +73,7 @@ app.post("/checkRecaptcha", (req, res)=> {
     res.send(data.success)
   })
 })
+
 
 
 app.listen(port, () => {
