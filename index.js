@@ -3,6 +3,9 @@ const cors = require('cors');
 const multer = require('multer')
 const path = require('path')
 const fetch = require("node-fetch")
+const https = require('https')
+const fs = require('fs')
+const parser = require('xml2json')
 const app = express()
 const port = 3001
 
@@ -71,6 +74,34 @@ app.post("/checkRecaptcha", (req, res)=> {
   .then(response => response.json())
   .then(data => {
     res.send(data.success)
+  })
+})
+
+app.get("/loadLocationXML", (req, res) => {
+  const file = fs.createWriteStream("./location.xml");
+  //chinese version: https://www.fehd.gov.hk/tc_chi/licensing/license/text/LP_Restaurants_TC.XML
+  //english version: https://www.fehd.gov.hk/english/licensing/license/text/LP_Restaurants_EN.XML
+  const request = https.get("https://www.fehd.gov.hk/tc_chi/licensing/license/text/LP_Restaurants_TC.XML", function(response) {
+    response.pipe(file);
+  });
+})
+
+app.get("/xmlToJson", (req, res) => {
+  fs.readFile('./location.xml', (err, data) => {
+    if (Object.keys(data).length === 0) { // latency in loadLocationXML problem
+      console.log("error")
+      return
+    }
+    const jsonString = parser.toJson(data)
+    const jsonObj = JSON.parse(jsonString)
+    const restaurantInfo = jsonObj.DATA.LPS.LP
+    const limitresInfo = restaurantInfo.slice(0, 100) //due to pricing in google api, limit the usage 1st
+    const restaurantLoc = limitresInfo.map(({SS, ADR}) => {
+      return {SS, ADR}
+    })
+    const saveObj = {restaurantLoc}
+    const saveJson = JSON.stringify(saveObj);
+    fs.writeFile('./restaurantLoc.json', saveJson, 'utf8', () => {console.log("json file saved")});
   })
 })
 
