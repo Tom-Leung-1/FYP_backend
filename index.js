@@ -8,6 +8,7 @@ const fs = require('fs')
 const parser = require('xml2json')
 const app = express()
 const port = 3001
+const config = require('./config.json')
 
 // enable body from req
 const bodyParser = require("body-parser")
@@ -87,7 +88,7 @@ app.get("/loadLocationXML", (req, res) => {
 })
 
 app.get("/xmlToJson", (req, res) => {
-  fs.readFile('./location.xml', (err, data) => {
+  fs.readFile('./location.xml', async (err, data) => {
     if (Object.keys(data).length === 0) { // latency in loadLocationXML problem
       console.log("error")
       return
@@ -95,10 +96,18 @@ app.get("/xmlToJson", (req, res) => {
     const jsonString = parser.toJson(data)
     const jsonObj = JSON.parse(jsonString)
     const restaurantInfo = jsonObj.DATA.LPS.LP
-    const limitresInfo = restaurantInfo.slice(0, 100) //due to pricing in google api, limit the usage 1st
-    const restaurantLoc = limitresInfo.map(({SS, ADR}) => {
-      return {SS, ADR}
-    })
+    //due to pricing in google api, limit the usage 1st
+    const limitresInfo = restaurantInfo.slice(0, 100)
+    // geocoding
+    const restaurantLoc = []
+    for (const res of limitresInfo) { // using async in array.map is incompatible, perhaps array.map is synchronous function
+      const {SS, ADR} = res
+      const url = new URL(`https://maps.googleapis.com/maps/api/geocode/json?address=${ADR}&key=${config.key}`)
+        const response = await fetch(url)
+        const resData = await response.json()
+        const {lat, lng} = resData.results[0].geometry.location
+        restaurantLoc.push({SS, ADR, lat, lng})
+    }
     const saveObj = {restaurantLoc}
     const saveJson = JSON.stringify(saveObj);
     fs.writeFile('./restaurantLoc.json', saveJson, 'utf8', () => {console.log("json file saved")});
