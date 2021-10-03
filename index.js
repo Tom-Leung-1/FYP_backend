@@ -5,17 +5,17 @@ const path = require('path')
 const fetch = require("node-fetch")
 const https = require('https')
 const fs = require('fs')
-const parser = require('xml2json')
+const parser = require('xml2json') // this line cause error, no need xml2json now because restaurants location is not precise
 const app = express()
 const port = 3001
-const config = require('./config.json')
+// const config = require('./config.json') // have to tackle config
 
 // enable body from req
 const bodyParser = require("body-parser")
 //json
 const jsonParser = bodyParser.json()
 //x-www-form-urlencoded
-const urlencodedParsser = bodyParser.urlencoded({extended: false})
+const urlencodedParsser = bodyParser.urlencoded({ extended: false })
 // use middle ware
 app.use(jsonParser)
 app.use(urlencodedParsser)
@@ -33,22 +33,22 @@ const storage = multer.diskStorage({
 })
 
 const upload = multer({
-   storage: storage,
-   fileFilter: function (req, file, cb) {
-      const ext = path.extname(file.originalname);
-      if(ext !== '.png' && ext !== '.jpg'  && ext !== '.jpeg') {
-        return cb(new Error('Only images (jpg/png/jpeg) are allowed'))
-      }
-      cb(null, true)
-   } 
-  }).single('file')
+  storage: storage,
+  fileFilter: function (req, file, cb) {
+    const ext = path.extname(file.originalname);
+    if (ext !== '.png' && ext !== '.jpg' && ext !== '.jpeg') {
+      return cb(new Error('Only images (jpg/png/jpeg) are allowed'))
+    }
+    cb(null, true)
+  }
+}).single('file')
 
 app.get('/', (req, res) => {
   res.send('Hello World!')
 })
 
 app.get("/expectedTime", async (req, res) => {
-  let {origin, destination, key} = req.query
+  let { origin, destination, key } = req.query
   origin = JSON.parse(origin)
   destination = JSON.parse(destination)
   const response = await fetch(`https://maps.googleapis.com/maps/api/distancematrix/json?&origins=${origin.lat},${origin.lng}&destinations=${destination.lat},${destination.lng}&key=${key}`)
@@ -57,8 +57,8 @@ app.get("/expectedTime", async (req, res) => {
 
 })
 
-app.post("/upload", (req, res)=> {
-  upload(req, res, function(err) {
+app.post("/upload", (req, res) => {
+  upload(req, res, function (err) {
     if (err instanceof multer.MulterError) {
       return res.status(500).json(err)
     }
@@ -69,20 +69,20 @@ app.post("/upload", (req, res)=> {
   })
 })
 
-app.post("/checkRecaptcha", (req, res)=> {
-  const {secret, response} = req.body
+app.post("/checkRecaptcha", (req, res) => {
+  const { secret, response } = req.body
   fetch(`https://www.google.com/recaptcha/api/siteverify?secret=${secret}&response=${response}`)
-  .then(response => response.json())
-  .then(data => {
-    res.send(data.success)
-  })
+    .then(response => response.json())
+    .then(data => {
+      res.send(data.success)
+    })
 })
 
 app.get("/loadLocationXML", (req, res) => {
   const file = fs.createWriteStream("./location.xml");
   //chinese version: https://www.fehd.gov.hk/tc_chi/licensing/license/text/LP_Restaurants_TC.XML
   //english version: https://www.fehd.gov.hk/english/licensing/license/text/LP_Restaurants_EN.XML
-  const request = https.get("https://www.fehd.gov.hk/tc_chi/licensing/license/text/LP_Restaurants_TC.XML", function(response) {
+  const request = https.get("https://www.fehd.gov.hk/tc_chi/licensing/license/text/LP_Restaurants_TC.XML", function (response) {
     response.pipe(file);
   });
 })
@@ -101,16 +101,16 @@ app.get("/xmlToJson", (req, res) => {
     // geocoding
     const restaurantLoc = []
     for (const res of limitresInfo) { // using async in array.map is incompatible, perhaps array.map is synchronous function
-      const {SS, ADR} = res
+      const { SS, ADR } = res
       const url = new URL(`https://maps.googleapis.com/maps/api/geocode/json?address=${ADR}&key=${config.key}`)
-        const response = await fetch(url)
-        const resData = await response.json()
-        const {lat, lng} = resData.results[0].geometry.location
-        restaurantLoc.push({SS, ADR, lat, lng})
+      const response = await fetch(url)
+      const resData = await response.json()
+      const { lat, lng } = resData.results[0].geometry.location
+      restaurantLoc.push({ SS, ADR, lat, lng })
     }
-    const saveObj = {restaurantLoc}
+    const saveObj = { restaurantLoc }
     const saveJson = JSON.stringify(saveObj);
-    fs.writeFile('./restaurantLoc.json', saveJson, 'utf8', () => {console.log("json file saved")});
+    fs.writeFile('./restaurantLoc.json', saveJson, 'utf8', () => { console.log("json file saved") });
   })
 })
 
