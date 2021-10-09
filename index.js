@@ -8,7 +8,24 @@ const fs = require('fs')
 const parser = require('xml2json') // this line cause error, no need xml2json now because restaurants location is not precise
 const app = express()
 const port = 3001
+const mysql = require('mysql')
 // const config = require('./config.json') // have to tackle config
+const db = mysql.createConnection({
+  host: "aws-fyp.ckcjrbsei8vt.us-east-2.rds.amazonaws.com",
+  user: "admin",
+  password: "12345678",
+  database: 'fyp',
+})
+
+db.connect((err) => {
+  if (err) {
+    console.log(err)
+  }
+  else {
+    console.log("Mysql connection success")
+  }
+})
+
 
 // enable body from req
 const bodyParser = require("body-parser")
@@ -21,7 +38,6 @@ app.use(jsonParser)
 app.use(urlencodedParsser)
 
 app.use(cors());
-
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -42,6 +58,7 @@ const upload = multer({
     cb(null, true)
   }
 }).single('file')
+
 
 app.get('/', (req, res) => {
   res.send('Hello World!')
@@ -67,6 +84,20 @@ app.post("/upload", (req, res) => {
     }
     return res.status(200).send(req.file)
   })
+})
+
+app.post("/uploadRegistration", (req, res) => {
+  const { firstValue, lastValue, phoneValue, idValue, restaurantValue, addressValue, filename } = req.body
+  console.log(req.body)
+  db.query("Insert into registration (hkid, first_name, last_name, br_name, phone, restaurant, address) values (?, ?, ?, ?, ?, ?, ?)",
+    [idValue, firstValue, lastValue, filename, phoneValue, restaurantValue, addressValue], (err, results) => {
+      if (err) {
+        console.log(err)
+        return
+      }
+      console.log(results)
+    }
+  )
 })
 
 app.post("/checkRecaptcha", (req, res) => {
