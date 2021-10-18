@@ -28,7 +28,8 @@ db.connect((err) => {
 
 
 // enable body from req
-const bodyParser = require("body-parser")
+const bodyParser = require("body-parser");
+const { errorMonitor } = require('events');
 //json
 const jsonParser = bodyParser.json()
 //x-www-form-urlencoded
@@ -96,6 +97,53 @@ app.post("/uploadRegistration", (req, res) => {
         return
       }
       console.log(results)
+    }
+  )
+})
+
+app.post("/signup", (req, res) => {
+  const { usernameValue, emailValue, password} = req.body
+  console.log(req.body)
+  db.query("Select id from users where username = ? or email = ?",
+    [usernameValue, emailValue], (err, results) => {
+      if (err) {
+        console.log(err)
+        res.status(500).send("Server error.")
+        return
+      }
+      if (results.length !== 0) {
+        res.status(401).send("username or email is already used.")
+        return
+      }
+      db.query("Insert into users (username, email, password) values (?, ?, ?)",
+        [usernameValue, emailValue, password], (err, results) => {
+          if (err) {
+            console.log(err)
+            return
+          }
+          console.log(results)
+          res.status(200).json(results)
+        }
+      )
+    }
+  )
+})
+
+app.post("/signin", (req, res) => {
+  const { username, password} = req.body
+  console.log(req.body)
+  db.query("Select id from users where username = ? and password = ?",
+    [username, password], (err, results) => {
+      if (err) {
+        console.log(err)
+        res.status(500).send("Server error.")
+        return
+      }
+      if (results.length === 0) {
+        res.status(401).send("Cannot find relevant users")
+        return
+      }
+      res.status(200).json(results)
     }
   )
 })
