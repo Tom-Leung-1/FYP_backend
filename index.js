@@ -13,7 +13,7 @@ const mysql = require('mysql')
 const db = mysql.createConnection({
   host: "aws-fyp.ckcjrbsei8vt.us-east-2.rds.amazonaws.com",
   user: "admin",
-  password: "12345678",
+  password: "Hackerwillbeafraid!",
   database: 'fyp',
 })
 
@@ -155,6 +155,23 @@ app.post("/checkRecaptcha", (req, res) => {
     .then(data => {
       res.send(data.success)
     })
+})
+
+app.get("/getdata", (req, res) => {
+  db.query("Select * from meals where restaurantId = ?",
+    [req.query.id], (err, results) => {
+      if (err) {
+        console.log(err)
+        res.status(500).send("Server error.")
+        return
+      }
+      if (results.length === 0) {
+        res.status(401).send("data not found")
+        return
+      }
+      res.status(200).json(results)
+    }
+  )
 })
 
 app.get("/loadLocationXML", (req, res) => {
