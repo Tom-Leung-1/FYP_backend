@@ -42,7 +42,7 @@ app.use(cors());
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "upload")
+    cb(null, "../FYP/public/images/upload") // must put the FYP folder beside the FYP_backend (or it wont work)
   },
   filename: function (req, file, cb) {
     cb(null, Date.now() + "-" + file.originalname)
