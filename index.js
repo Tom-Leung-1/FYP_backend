@@ -45,7 +45,7 @@ const storageReg = multer.diskStorage({
     cb(null, "../FYP/public/images/registration") // must put the FYP folder beside the FYP_backend (or it wont work)
   },
   filename: function (req, file, cb) {
-    cb(null, Date.now() + "-" + file.originalname)
+    cb(null, Date.now() + path.extname(file.originalname))
   }
 })
 
@@ -54,7 +54,7 @@ const storageMeals = multer.diskStorage({
     cb(null, "../FYP/public/images/meals") // must put the FYP folder beside the FYP_backend (or it wont work)
   },
   filename: function (req, file, cb) {
-    cb(null, Date.now() + "-" + file.originalname)
+    cb(null, Date.now() + path.extname(file.originalname))
   }
 })
 
@@ -120,6 +120,33 @@ app.post("/mealsUpload", (req, res) => {
   })
 })
 
+app.post("/updateMeal", (req,res) => {
+  const {id, name, type, price, avalibleTime, remarks, withSet, fileName} = req.body
+  if (!fileName) {
+    db.query("Update meals set name = ?, type = ?, price = ?, avalibleTime = ?, remarks = ?, withSet = ? where id = ?",
+    [name, type, price, avalibleTime, remarks, withSet, id], (err, results) => {
+    if (err) {
+      console.log(err)
+      res.status(500).send("Server error.")
+      return
+    }
+    console.log(results)
+    res.status(200).json(results)
+    })
+    return
+  }
+  db.query("Update meals set name = ?, type = ?, price = ?, avalibleTime = ?, remarks = ?, withSet = ?, photo = ? where id = ?",
+    [name, type, price, avalibleTime, remarks, withSet, fileName, id], (err, results) => {
+    if (err) {
+      console.log(err)
+      res.status(500).send("Server error.")
+      return
+    }
+    console.log(results)
+    res.status(200).json(results)
+    })
+})
+
 app.post("/uploadRegistration", (req, res) => {
   const { firstValue, lastValue, phoneValue, idValue, restaurantValue, addressValue, filename } = req.body
   console.log(req.body)
@@ -135,30 +162,17 @@ app.post("/uploadRegistration", (req, res) => {
 })
 
 app.post("/insertMeal", (req, res) => {
-  const {restaurantId, name, type, price, avalibleTime, remarks, withSet, newPhotoUrl} = req.body
+  const {restaurantId, name, type, price, avalibleTime, remarks, withSet, fileName} = req.body
   db.query("Insert into meals (restaurantId, name, type, price, avalibleTime, remarks, withSet, photo, maxOrder) values (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-    [usernameValue, emailValue], (err, results) => {
-      if (err) {
-        console.log(err)
-        res.status(500).send("Server error.")
-        return
-      }
-      if (results.length !== 0) {
-        res.status(401).send("username or email is already used.")
-        return
-      }
-      db.query("Insert into users (username, email, password) values (?, ?, ?)",
-        [usernameValue, emailValue, password], (err, results) => {
-          if (err) {
-            console.log(err)
-            return
-          }
-          console.log(results)
-          res.status(200).json(results)
-        }
-      )
+    [restaurantId, name, type, price, avalibleTime, remarks, withSet, fileName, 5], (err, results) => {
+    if (err) {
+      console.log(err)
+      res.status(500).send("Server error.")
+      return
     }
-  )
+    console.log(results)
+    res.status(200).json(results)
+  })
 })
 
 app.post("/signup", (req, res) => {
@@ -219,6 +233,23 @@ app.post("/checkRecaptcha", (req, res) => {
 
 app.get("/getdata", (req, res) => {
   db.query("Select * from meals where restaurantId = ?",
+    [req.query.id], (err, results) => {
+      if (err) {
+        console.log(err)
+        res.status(500).send("Server error.")
+        return
+      }
+      if (results.length === 0) {
+        res.status(401).send("data not found")
+        return
+      }
+      res.status(200).json(results)
+    }
+  )
+})
+
+app.get("/deleteMeal", (req, res) => {
+  db.query("delete from meals where id = ?",
     [req.query.id], (err, results) => {
       if (err) {
         console.log(err)
