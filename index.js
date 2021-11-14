@@ -40,17 +40,26 @@ app.use(urlencodedParsser)
 
 app.use(cors());
 
-const storage = multer.diskStorage({
+const storageReg = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "../FYP/public/images/upload") // must put the FYP folder beside the FYP_backend (or it wont work)
+    cb(null, "../FYP/public/images/registration") // must put the FYP folder beside the FYP_backend (or it wont work)
   },
   filename: function (req, file, cb) {
     cb(null, Date.now() + "-" + file.originalname)
   }
 })
 
-const upload = multer({
-  storage: storage,
+const storageMeals = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "../FYP/public/images/meals") // must put the FYP folder beside the FYP_backend (or it wont work)
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + "-" + file.originalname)
+  }
+})
+
+const uploadReg = multer({
+  storage: storageReg,
   fileFilter: function (req, file, cb) {
     const ext = path.extname(file.originalname);
     if (ext !== '.png' && ext !== '.jpg' && ext !== '.jpeg') {
@@ -60,6 +69,16 @@ const upload = multer({
   }
 }).single('file')
 
+const mealsUpload = multer({
+  storage: storageMeals,
+  fileFilter: function (req, file, cb) {
+    const ext = path.extname(file.originalname);
+    if (ext !== '.png' && ext !== '.jpg' && ext !== '.jpeg') {
+      return cb(new Error('Only images (jpg/png/jpeg) are allowed'))
+    }
+    cb(null, true)
+  }
+}).single('file')
 
 app.get('/', (req, res) => {
   res.send('Hello World!')
@@ -75,14 +94,28 @@ app.get("/expectedTime", async (req, res) => {
 
 })
 
-app.post("/upload", (req, res) => {
-  upload(req, res, function (err) {
+app.post("/uploadReg", (req, res) => {
+  uploadReg(req, res, function (err) {
     if (err instanceof multer.MulterError) {
       return res.status(500).json(err)
     }
     else if (err) {
       return res.status(500).json(err)
     }
+    console.log(req.file)
+    return res.status(200).send(req.file)
+  })
+})
+
+app.post("/mealsUpload", (req, res) => {
+  mealsUpload(req, res, function (err) {
+    if (err instanceof multer.MulterError) {
+      return res.status(500).json(err)
+    }
+    else if (err) {
+      return res.status(500).json(err)
+    }
+    console.log(req.file)
     return res.status(200).send(req.file)
   })
 })
@@ -97,6 +130,33 @@ app.post("/uploadRegistration", (req, res) => {
         return
       }
       console.log(results)
+    }
+  )
+})
+
+app.post("/insertMeal", (req, res) => {
+  const {restaurantId, name, type, price, avalibleTime, remarks, withSet, newPhotoUrl} = req.body
+  db.query("Insert into meals (restaurantId, name, type, price, avalibleTime, remarks, withSet, photo, maxOrder) values (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    [usernameValue, emailValue], (err, results) => {
+      if (err) {
+        console.log(err)
+        res.status(500).send("Server error.")
+        return
+      }
+      if (results.length !== 0) {
+        res.status(401).send("username or email is already used.")
+        return
+      }
+      db.query("Insert into users (username, email, password) values (?, ?, ?)",
+        [usernameValue, emailValue, password], (err, results) => {
+          if (err) {
+            console.log(err)
+            return
+          }
+          console.log(results)
+          res.status(200).json(results)
+        }
+      )
     }
   )
 })
