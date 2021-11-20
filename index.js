@@ -248,6 +248,20 @@ app.get("/getdata", (req, res) => {
   )
 })
 
+app.get("/getRestaurants", (req, res) => {
+  const searchTag = req.query.searchTag || ".*"
+  db.query("Select * from registration where restaurant REGEXP ? ",
+    [searchTag], (err, results) => {
+      if (err) {
+        console.log(err)
+        res.status(500).send("Server error.")
+        return
+      }
+      res.status(200).json(results)
+    }
+  )
+})
+
 app.get("/deleteMeal", (req, res) => {
   db.query("delete from meals where id = ?",
     [req.query.id], (err, results) => {
