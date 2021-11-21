@@ -58,6 +58,26 @@ const storageMeals = multer.diskStorage({
   }
 })
 
+const storageRes = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "../FYP/public/images/restaurants") // must put the FYP folder beside the FYP_backend (or it wont work)
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + path.extname(file.originalname))
+  }
+})
+
+const uploadRes = multer({
+  storage: storageRes,
+  fileFilter: function (req, file, cb) {
+    const ext = path.extname(file.originalname);
+    if (ext !== '.png' && ext !== '.jpg' && ext !== '.jpeg') {
+      return cb(new Error('Only images (jpg/png/jpeg) are allowed'))
+    }
+    cb(null, true)
+  }
+}).single('file')
+
 const uploadReg = multer({
   storage: storageReg,
   fileFilter: function (req, file, cb) {
@@ -96,6 +116,19 @@ app.get("/expectedTime", async (req, res) => {
 
 app.post("/uploadReg", (req, res) => {
   uploadReg(req, res, function (err) {
+    if (err instanceof multer.MulterError) {
+      return res.status(500).json(err)
+    }
+    else if (err) {
+      return res.status(500).json(err)
+    }
+    console.log(req.file)
+    return res.status(200).send(req.file)
+  })
+})
+
+app.post("/uploadRes", (req, res) => {
+  uploadRes(req, res, function (err) {
     if (err instanceof multer.MulterError) {
       return res.status(500).json(err)
     }
@@ -148,10 +181,10 @@ app.post("/updateMeal", (req,res) => {
 })
 
 app.post("/uploadRegistration", (req, res) => {
-  const { firstValue, lastValue, phoneValue, idValue, restaurantValue, addressValue, filename } = req.body
+  const { firstValue, lastValue, phoneValue, idValue, restaurantValue, addressValue, brFileName, photoFilename, lat, lng } = req.body
   console.log(req.body)
-  db.query("Insert into registration (hkid, first_name, last_name, br_name, phone, restaurant, address) values (?, ?, ?, ?, ?, ?, ?)",
-    [idValue, firstValue, lastValue, filename, phoneValue, restaurantValue, addressValue], (err, results) => {
+  db.query("Insert into registration (hkid, first_name, last_name, br_name, phone, restaurant, address, photo, lat, lng) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    [idValue, firstValue, lastValue, brFileName, phoneValue, restaurantValue, addressValue, photoFilename, lat, lng], (err, results) => {
       if (err) {
         console.log(err)
         return
