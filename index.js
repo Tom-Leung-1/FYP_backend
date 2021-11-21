@@ -274,6 +274,19 @@ app.get("/getdata", (req, res) => {
   )
 })
 
+app.get("/getOrders", (req, res) => {
+  db.query("Select * from order_items where restaurantId = ? and done = 0",
+    [req.query.id], (err, results) => {
+      if (err) {
+        console.log(err)
+        res.status(500).send("Server error.")
+        return
+      }
+      res.status(200).json(results)
+    }
+  )
+})
+
 app.get("/getRestaurants", (req, res) => {
   const searchTag = req.query.searchTag || ".*"
   db.query("Select * from registration where restaurant REGEXP ? ",
