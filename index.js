@@ -206,7 +206,7 @@ app.post("/signup", (req, res) => {
 app.post("/signin", (req, res) => {
   const { username, password} = req.body
   console.log(req.body)
-  db.query("Select id, owner from users where username = ? and password = ?",
+  db.query("Select id, owner, restaurantId from users where username = ? and password = ?",
     [username, password], (err, results) => {
       if (err) {
         console.log(err)
@@ -217,6 +217,32 @@ app.post("/signin", (req, res) => {
         res.status(401).send("Cannot find relevant users")
         return
       }
+      res.status(200).json(results)
+    }
+  )
+})
+
+app.post("/sendOrder", (req, res) => { // early return before insert all values... (async problem)
+  const { clientOrder, clientTotal, clientTakeaway, clientRestaurantId} = req.body
+  console.log(req.body)
+  db.query("Select max(order_id) as maxId from order_items", (err, results) => {
+      if (err) {
+        console.log(err)
+        res.status(500).send("Server error.")
+        return
+      }
+      const newId = results[0].maxId ? results[0].maxId + 1 : 1
+      clientOrder.forEach(({name, drink, price, special}) => {
+        db.query("Insert into order_items (order_id, name, drink, price, special, total, takeaway, done, restaurantId) values (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+          [newId, name, drink, price, special, clientTotal, clientTakeaway ? 1 : 0, 0, clientRestaurantId], (err, results) => {
+            if (err) {
+              console.log(err)
+              return
+            }
+            console.log(results)
+          }
+        )
+      })
       res.status(200).json(results)
     }
   )
