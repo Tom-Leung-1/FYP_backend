@@ -195,8 +195,8 @@ app.post("/signup", (req, res) => {
             console.log(err)
             return
           }
-          console.log(results)
-          res.status(200).json(results)
+          console.log(results.insertId)
+          res.status(200).send({ id: results.insertId, owner: 0})
         }
       )
     }
@@ -206,7 +206,7 @@ app.post("/signup", (req, res) => {
 app.post("/signin", (req, res) => {
   const { username, password} = req.body
   console.log(req.body)
-  db.query("Select id from users where username = ? and password = ?",
+  db.query("Select id, owner from users where username = ? and password = ?",
     [username, password], (err, results) => {
       if (err) {
         console.log(err)
