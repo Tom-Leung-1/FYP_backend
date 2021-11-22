@@ -276,6 +276,22 @@ app.post("/signin", (req, res) => {
   )
 })
 
+app.post("/userOrder", (req, res) => {
+  const {userId, orderId, restaurant, clientTakeaway, clientTotal} = req.body
+  console.log(req.body)
+  const date = new Date().toISOString().slice(0, 19).replace('T', ' ')
+  db.query("Insert into user_orders (user_id, order_id, order_date, restaurant, type, total) values (?, ?, ?, ?, ?, ?)",
+    [userId, orderId, date, restaurant, clientTakeaway ? 1 : 0, clientTotal], (err, results) => {
+      if (err) {
+        console.log(err)
+        res.status(500).send("Server error.")
+        return
+      }
+      res.status(200).json(results)
+    }
+  )
+})
+
 app.post("/sendOrder", (req, res) => { // early return before insert all values... (async problem)
   const { clientOrder, clientTotal, clientTakeaway, clientRestaurantId} = req.body
   console.log(req.body)
@@ -297,7 +313,7 @@ app.post("/sendOrder", (req, res) => { // early return before insert all values.
           }
         )
       })
-      res.status(200).json(results)
+      res.status(200).json(newId)
     }
   )
 })
@@ -320,7 +336,24 @@ app.get("/getdata", (req, res) => {
         return
       }
       if (results.length === 0) {
-        res.status(401).send("data not found")
+        res.status(400).send("data not found")
+        return
+      }
+      res.status(200).json(results)
+    }
+  )
+})
+
+app.get("/getUserOrders", (req, res) => {
+  db.query("Select * from user_orders where user_id = ?",
+    [req.query.id], (err, results) => {
+      if (err) {
+        console.log(err)
+        res.status(500).send("Server error.")
+        return
+      }
+      if (results.length === 0) {
+        res.status(400).send("data not found")
         return
       }
       res.status(200).json(results)
