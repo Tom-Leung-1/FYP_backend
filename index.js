@@ -181,14 +181,21 @@ app.post("/updateMeal", (req,res) => {
 })
 
 app.post("/uploadRegistration", (req, res) => {
-  const { firstValue, lastValue, phoneValue, idValue, restaurantValue, addressValue, brFileName, photoFilename, lat, lng } = req.body
+  const { firstValue, lastValue, phoneValue, idValue, restaurantValue, addressValue, brFileName, photoFilename, lat, lng, userId, OpenHours } = req.body
   console.log(req.body)
-  db.query("Insert into registration (hkid, first_name, last_name, br_name, phone, restaurant, address, photo, lat, lng) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-    [idValue, firstValue, lastValue, brFileName, phoneValue, restaurantValue, addressValue, photoFilename, lat, lng], (err, results) => {
+  db.query("Insert into registration (hkid, first_name, last_name, br_name, phone, restaurant, address, photo, lat, lng, open_hours) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    [idValue, firstValue, lastValue, brFileName, phoneValue, restaurantValue, addressValue, photoFilename, lat, lng, OpenHours], (err, results) => {
       if (err) {
         console.log(err)
         return
       }
+      db.query("Update users set owner = 1, restaurantId = ? where id = ?",
+      [results.insertId, userId], (err, results2) => {
+        if (err) {
+          console.log(err)
+          return
+        }
+      })
       console.log(results)
     }
   )
@@ -300,6 +307,23 @@ app.get("/getdata", (req, res) => {
       }
       if (results.length === 0) {
         res.status(401).send("data not found")
+        return
+      }
+      res.status(200).json(results)
+    }
+  )
+})
+
+app.get("/getRegData", (req, res) => {
+  db.query("Select * from registration where id = ?",
+    [req.query.id], (err, results) => {
+      if (err) {
+        console.log(err)
+        res.status(500).send("Server error.")
+        return
+      }
+      if (results.length === 0) {
+        res.status(400).send("data not found")
         return
       }
       res.status(200).json(results)
