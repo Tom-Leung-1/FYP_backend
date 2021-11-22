@@ -153,6 +153,20 @@ app.post("/mealsUpload", (req, res) => {
   })
 })
 
+app.post("/saveTimeSetting", (req, res) => {
+  const {all, restaurantId} = req.body
+  db.query("Update registration set open_hours = ? where id = ?",
+    [all, restaurantId], (err, results) => {
+      if (err) {
+        console.log(err)
+        res.status(500).send("Server error.")
+        return
+      }
+      res.status(200).json(results)
+    }
+  )
+})
+
 app.post("/updateMeal", (req,res) => {
   const {id, name, type, price, avalibleTime, remarks, withSet, fileName} = req.body
   if (!fileName) {
@@ -333,6 +347,19 @@ app.get("/getRegData", (req, res) => {
 
 app.get("/getOrders", (req, res) => {
   db.query("Select * from order_items where restaurantId = ? and done = 0",
+    [req.query.id], (err, results) => {
+      if (err) {
+        console.log(err)
+        res.status(500).send("Server error.")
+        return
+      }
+      res.status(200).json(results)
+    }
+  )
+})
+
+app.get("/getTimeSetting", (req, res) => {
+  db.query("Select open_hours from registration where id = ?",
     [req.query.id], (err, results) => {
       if (err) {
         console.log(err)
