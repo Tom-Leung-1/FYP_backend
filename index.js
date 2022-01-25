@@ -345,7 +345,11 @@ app.get("/getdata", (req, res) => {
 })
 
 app.get("/getUserOrders", (req, res) => {
-  db.query("Select * from user_orders where user_id = ?",
+  db.query("Select user_id, order_id, order_date, restaurant, type, u.total, name, drink, price, special "
+  + "from user_orders u "
+  + "left join order_items "
+  + "using (order_id) "
+  + "where user_id = ? ",
     [req.query.id], (err, results) => {
       if (err) {
         console.log(err)
