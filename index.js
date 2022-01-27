@@ -229,6 +229,23 @@ app.post("/insertMeal", (req, res) => {
   })
 })
 
+app.post("/sendBooking", (req, res) => {
+  let {noPeople, dateTime, userId, clientRestaurantId} = req.body
+  // dateTime -> toISOString()
+  dateTime = dateTime.slice(0, 19).replace('T', ' ')
+  console.log(typeof dateTime)
+  db.query("Insert into reservations (user_id, restaurant_id, date_time, ppl, progress) values (?, ?, ?, ?, ?)",
+    [userId, clientRestaurantId, dateTime, noPeople, "pending"], (err, results) => {
+    if (err) {
+      console.log(err)
+      res.status(500).send("Server error.")
+      return
+    }
+    console.log(results)
+    res.status(200).json(results)
+  })
+})
+
 app.post("/signup", (req, res) => {
   const { usernameValue, emailValue, password} = req.body
   console.log(req.body)
