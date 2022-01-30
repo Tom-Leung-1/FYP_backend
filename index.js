@@ -297,8 +297,8 @@ app.post("/userOrder", (req, res) => {
   const {userId, orderId, restaurant, clientTakeaway, clientTotal} = req.body
   console.log(req.body)
   const date = new Date().toISOString().slice(0, 19).replace('T', ' ')
-  db.query("Insert into user_orders (user_id, order_id, order_date, restaurant, type, total) values (?, ?, ?, ?, ?, ?)",
-    [userId, orderId, date, restaurant, clientTakeaway ? 1 : 0, clientTotal], (err, results) => {
+  db.query("Insert into user_orders (user_id, order_id, order_date, restaurant, type, total, status) values (?, ?, ?, ?, ?, ?, ?)",
+    [userId, orderId, date, restaurant, clientTakeaway ? 1 : 0, clientTotal, "pending"], (err, results) => {
       if (err) {
         console.log(err)
         res.status(500).send("Server error.")
@@ -362,7 +362,7 @@ app.get("/getdata", (req, res) => {
 })
 
 app.get("/getUserOrders", (req, res) => {
-  db.query("Select user_id, order_id, order_date, restaurant, type, u.total, name, drink, price, special "
+  db.query("Select user_id, order_id, order_date, restaurant, type, u.total, name, drink, price, special, status "
   + "from user_orders u "
   + "left join order_items "
   + "using (order_id) "
@@ -401,6 +401,23 @@ app.get("/getRegData", (req, res) => {
 
 app.get("/getOrders", (req, res) => {
   db.query("Select * from order_items where restaurantId = ? and done = 0",
+    [req.query.id], (err, results) => {
+      if (err) {
+        console.log(err)
+        res.status(500).send("Server error.")
+        return
+      }
+      res.status(200).json(results)
+    }
+  )
+})
+
+app.get("/getResReservations", (req, res) => {
+  db.query("SELECT r.id, date_time, u.username, ppl, progress "
+  +"from reservations r "
+  +"left join users u "
+  +"on r.user_id = u.id " 
+  +"where r.restaurant_id = ?",
     [req.query.id], (err, results) => {
       if (err) {
         console.log(err)
