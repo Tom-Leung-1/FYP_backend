@@ -168,10 +168,10 @@ app.post("/saveTimeSetting", (req, res) => {
 })
 
 app.post("/updateMeal", (req,res) => {
-  const {id, name, type, price, avalibleTime, remarks, withSet, fileName} = req.body
+  const {id, name, type, price, avalibleTime, remarks, withSet, fileName, inStock} = req.body
   if (!fileName) {
-    db.query("Update meals set name = ?, type = ?, price = ?, avalibleTime = ?, remarks = ?, withSet = ? where id = ?",
-    [name, type, price, avalibleTime, remarks, withSet, id], (err, results) => {
+    db.query("Update meals set name = ?, type = ?, price = ?, avalibleTime = ?, remarks = ?, withSet = ?, in_stock = ? where id = ?",
+    [name, type, price, avalibleTime, remarks, withSet, inStock, id], (err, results) => {
     if (err) {
       console.log(err)
       res.status(500).send("Server error.")
@@ -216,9 +216,9 @@ app.post("/uploadRegistration", (req, res) => {
 })
 
 app.post("/insertMeal", (req, res) => {
-  const {restaurantId, name, type, price, avalibleTime, remarks, withSet, fileName} = req.body
-  db.query("Insert into meals (restaurantId, name, type, price, avalibleTime, remarks, withSet, photo, maxOrder) values (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-    [restaurantId, name, type, price, avalibleTime, remarks, withSet, fileName, 5], (err, results) => {
+  const {restaurantId, name, type, price, avalibleTime, remarks, withSet, fileName, inStock} = req.body
+  db.query("Insert into meals (restaurantId, name, type, price, avalibleTime, remarks, withSet, photo, maxOrder, in_stock) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    [restaurantId, name, type, price, avalibleTime, remarks, withSet, fileName, 5, inStock], (err, results) => {
     if (err) {
       console.log(err)
       res.status(500).send("Server error.")
