@@ -9,6 +9,7 @@ const parser = require('xml2json') // this line cause error, no need xml2json no
 const app = express()
 const port = 3001
 const mysql = require('mysql')
+const crypto = require("crypto") // built in
 // const config = require('./config.json') // have to tackle config
 const db = mysql.createConnection({
   host: "aws-fyp.ckcjrbsei8vt.us-east-2.rds.amazonaws.com",
@@ -227,6 +228,52 @@ app.post("/insertMeal", (req, res) => {
     console.log(results)
     res.status(200).json(results)
   })
+})
+
+app.get("/checkEmail", (req, res) => {
+  db.query("Select * from users where email = ?",
+    [req.query.email], (err, results) => {
+    if (err) {
+      console.log(err)
+      res.status(500).send("Server error.")
+      return
+    }
+    console.log(results)
+    res.status(200).json(results)
+  })
+})
+
+app.post("/sendEmail", (req, res) => {
+  crypto.randomBytes(32, (err, buffer) => {
+    if (err) {
+      console.log(err)
+    }
+    const token = buffer.toString("hex")
+    const expire = new Date(Date.now() + 3600000).toISOString().slice(0, 19).replace('T', ' ') // 1hr // note that HKT is 8 hrs ahead // use Date.now to check if time is expired 
+    console.log(expire)
+    db.query("Update users set token = ?, expire = ? where email = ?",
+    [token, expire, req.body.emailValue], (err, results) => {
+      if (err) {
+        console.log(err)
+        res.status(500).send("Server error.")
+        return
+      }
+      console.log(results)
+      res.status(200).send({token})
+    })
+  })
+})
+
+app.get("/resetCheck", (req, res) => {
+  db.query("Select * from users where token = ?",
+    [req.query.token], (err, results) => {
+      if (err) {
+        console.log(err)
+        res.status(500).send("Server error.")
+        return
+      }
+      res.status(200).json(results)
+    })
 })
 
 app.post("/sendBooking", (req, res) => {
