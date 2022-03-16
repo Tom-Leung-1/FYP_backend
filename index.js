@@ -356,6 +356,20 @@ app.post("/userOrder", (req, res) => {
   )
 })
 
+app.post("/submitPassword", (req, res) => {
+  const {id, password} = req.body
+  db.query("update users set password = ? where id = ?",
+    [password, id], (err, results) => {
+      if (err) {
+        console.log(err)
+        res.status(500).send("Server error.")
+        return
+      }
+      res.status(200).json(results)
+    }
+  )
+})
+
 app.post("/sendOrder", (req, res) => { // early return before insert all values... (async problem)
   const { clientOrder, clientTotal, clientTakeaway, clientRestaurantId} = req.body
   console.log(req.body)
