@@ -270,6 +270,19 @@ app.post("/updateProfile", (req, res) => {
   })
 })
 
+app.post("/updatePassword", (req, res) => {
+  const {password, userId} = req.body
+  db.query("Update users set password = ? where id = ?",
+  [password, userId], (err, results) => {
+    if (err) {
+      console.log(err)
+      res.status(500).send("Server error.")
+      return
+    }
+    console.log(results)
+    res.status(200).send(results)
+  })
+})
 
 app.post("/sendEmail", (req, res) => {
   crypto.randomBytes(32, (err, buffer) => {
