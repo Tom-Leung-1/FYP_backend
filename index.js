@@ -112,7 +112,6 @@ app.get("/expectedTime", async (req, res) => {
   const response = await fetch(`https://maps.googleapis.com/maps/api/distancematrix/json?&origins=${origin.lat},${origin.lng}&destinations=${destination.lat},${destination.lng}&key=${key}`)
   const data = await response.json()
   return res.status(200).json(data)
-
 })
 
 app.post("/uploadReg", (req, res) => {
@@ -243,6 +242,35 @@ app.get("/checkEmail", (req, res) => {
   })
 })
 
+app.get("/checkInUse", (req, res) => {
+  const {email, username} = req.query
+  db.query("Select * from users where email = ? or username = ?",
+    [email, username], (err, results) => {
+    if (err) {
+      console.log(err)
+      res.status(500).send("Server error.")
+      return
+    }
+    console.log(results)
+    res.status(200).json(results)
+  })
+})
+
+app.post("/updateProfile", (req, res) => {
+  const {username, email, phone, userId} = req.body
+  db.query("Update users set username = ?, email = ?, phone = ? where id = ?",
+  [username, email, phone, userId], (err, results) => {
+    if (err) {
+      console.log(err)
+      res.status(500).send("Server error.")
+      return
+    }
+    console.log(results)
+    res.status(200).send(results)
+  })
+})
+
+
 app.post("/sendEmail", (req, res) => {
   crypto.randomBytes(32, (err, buffer) => {
     if (err) {
@@ -276,6 +304,18 @@ app.get("/resetCheck", (req, res) => {
     })
 })
 
+app.get("/getUserProfile", (req, res) => {
+  db.query("Select * from users where id = ?",
+    [req.query.id], (err, results) => {
+      if (err) {
+        console.log(err)
+        res.status(500).send("Server error.")
+        return
+      }
+      res.status(200).json(results)
+    })
+})
+
 app.post("/sendBooking", (req, res) => {
   let {noPeople, dateTime, userId, clientRestaurantId} = req.body
   // dateTime -> toISOString()
@@ -294,7 +334,7 @@ app.post("/sendBooking", (req, res) => {
 })
 
 app.post("/signup", (req, res) => {
-  const { usernameValue, emailValue, password} = req.body
+  const { usernameValue, emailValue, phoneValue, password} = req.body
   console.log(req.body)
   db.query("Select id from users where username = ? or email = ?",
     [usernameValue, emailValue], (err, results) => {
@@ -307,8 +347,8 @@ app.post("/signup", (req, res) => {
         res.status(401).send("username or email is already used.")
         return
       }
-      db.query("Insert into users (username, email, password) values (?, ?, ?)",
-        [usernameValue, emailValue, password], (err, results) => {
+      db.query("Insert into users (username, email, phone, password) values (?, ?, ?, ?)",
+        [usernameValue, emailValue, phoneValue, password], (err, results) => {
           if (err) {
             console.log(err)
             return
@@ -355,6 +395,8 @@ app.post("/userOrder", (req, res) => {
     }
   )
 })
+
+
 
 app.post("/submitPassword", (req, res) => {
   const {id, password} = req.body
