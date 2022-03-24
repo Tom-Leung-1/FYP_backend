@@ -425,6 +425,20 @@ app.post("/submitPassword", (req, res) => {
   )
 })
 
+app.post("/changeStatus", (req, res) => {
+  const {orderId, status} = req.body
+  db.query("update user_orders set status = ? where order_id = ?",
+    [status, orderId], (err, results) => {
+      if (err) {
+        console.log(err)
+        res.status(500).send("Server error.")
+        return
+      }
+      res.status(200).json(results)
+    }
+  )
+})
+
 app.post("/sendOrder", (req, res) => { // early return before insert all values... (async problem)
   const { clientOrder, clientTotal, clientTakeaway, clientRestaurantId} = req.body
   console.log(req.body)
@@ -516,7 +530,12 @@ app.get("/getRegData", (req, res) => {
 })
 
 app.get("/getOrders", (req, res) => {
-  db.query("Select * from order_items where restaurantId = ? and done = 0",
+  db.query("select o.*, uo.status, u.phone " + 
+  "from order_items o " +
+  "left join user_orders uo " +
+  "using (order_id) " +
+  "left join users u " +
+  "on u.id = uo.user_id ",
     [req.query.id], (err, results) => {
       if (err) {
         console.log(err)
