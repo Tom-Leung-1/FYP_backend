@@ -329,6 +329,38 @@ app.get("/getUserProfile", (req, res) => {
     })
 })
 
+app.get("/getUserReservation", (req, res)=> {
+  db.query("SELECT res.*,  reg.restaurant " +
+  "FROM reservations res " +
+  "left join " +
+  "registration reg " +
+  "on restaurant_id = reg.id " +
+  "where user_id = ? ",
+    [req.query.id], (err, results) => {
+      if (err) {
+        console.log(err)
+        res.status(500).send("Server error.")
+        return
+      }
+      res.status(200).json(results)
+    }
+  )
+})
+
+app.post("/cancelUserReservation", (req, res) => {
+  const {reservationId} = req.body
+  db.query("update reservations set progress = 'cancelled' where id = ?",
+    [reservationId], (err, results) => {
+    if (err) {
+      console.log(err)
+      res.status(500).send("Server error.")
+      return
+    }
+    console.log(results)
+    res.status(200).json(results)
+  })
+})
+
 app.post("/sendBooking", (req, res) => {
   let {noPeople, dateTime, userId, clientRestaurantId} = req.body
   // dateTime -> toISOString()
