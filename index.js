@@ -347,10 +347,10 @@ app.get("/getUserReservation", (req, res)=> {
   )
 })
 
-app.post("/cancelUserReservation", (req, res) => {
-  const {reservationId} = req.body
-  db.query("update reservations set progress = 'cancelled' where id = ?",
-    [reservationId], (err, results) => {
+app.post("/updateReservation", (req, res) => {
+  const {reservationId, updateString} = req.body
+  db.query("update reservations set progress = ? where id = ?",
+    [updateString, reservationId], (err, results) => {
     if (err) {
       console.log(err)
       res.status(500).send("Server error.")
@@ -580,7 +580,7 @@ app.get("/getOrders", (req, res) => {
 })
 
 app.get("/getResReservations", (req, res) => {
-  db.query("SELECT r.id, date_time, u.username, ppl, progress "
+  db.query("SELECT r.id, date_time, u.username, u.phone, ppl, progress "
   +"from reservations r "
   +"left join users u "
   +"on r.user_id = u.id " 
