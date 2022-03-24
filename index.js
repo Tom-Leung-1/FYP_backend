@@ -215,6 +215,21 @@ app.post("/uploadRegistration", (req, res) => {
   )
 })
 
+app.post("/updateRegistration", (req, res) => {
+  const {firstValue, lastValue, phoneValue, idValue, restaurantValue, addressValue, brFileName, photoFilename, lat, lng, descriptionValue, restaurantId} = req.body
+  console.log(req.body)
+  db.query("update registration set first_name = ?, last_name = ?, phone = ?, hkid = ?, restaurant = ?, address = ?, br_name = ?, photo = ?, lat = ?, lng = ?, description = ? where id = ?",
+    [firstValue, lastValue, phoneValue, idValue, restaurantValue, addressValue, brFileName, photoFilename, lat, lng, descriptionValue, restaurantId], (err, results) => {
+      if (err) {
+        console.log(err)
+        return
+      }
+      console.log(results)
+      res.status(200).json(results)
+    }
+  )
+})
+
 app.post("/insertMeal", (req, res) => {
   const {restaurantId, name, type, price, avalibleTime, remarks, withSet, fileName, inStock} = req.body
   db.query("Insert into meals (restaurantId, name, type, price, avalibleTime, remarks, withSet, photo, maxOrder, in_stock) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
