@@ -195,10 +195,10 @@ app.post("/updateMeal", (req,res) => {
 })
 
 app.post("/uploadRegistration", (req, res) => {
-  const { firstValue, lastValue, phoneValue, idValue, restaurantValue, addressValue, brFileName, photoFilename, lat, lng, userId, OpenHours } = req.body
+  const { firstValue, lastValue, phoneValue, idValue, restaurantValue, addressValue, brFileName, photoFilename, lat, lng, userId, OpenHours, descriptionValue } = req.body
   console.log(req.body)
-  db.query("Insert into registration (hkid, first_name, last_name, br_name, phone, restaurant, address, photo, lat, lng, open_hours) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-    [idValue, firstValue, lastValue, brFileName, phoneValue, restaurantValue, addressValue, photoFilename, lat, lng, OpenHours], (err, results) => {
+  db.query("Insert into registration (hkid, first_name, last_name, br_name, phone, restaurant, address, photo, lat, lng, open_hours, description) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    [idValue, firstValue, lastValue, brFileName, phoneValue, restaurantValue, addressValue, photoFilename, lat, lng, OpenHours, descriptionValue], (err, results) => {
       if (err) {
         console.log(err)
         return
