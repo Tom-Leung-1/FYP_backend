@@ -299,6 +299,25 @@ app.post("/updatePassword", (req, res) => {
   })
 })
 
+app.post("/sendValidEmail", (req, res) => {
+  crypto.randomBytes(32, (err, buffer) => {
+    if (err) {
+      console.log(err)
+    }
+    const token = buffer.toString("hex")
+    db.query("Update users set validToken = ? where email = ?",
+    [token, req.body.emailValue], (err, results) => {
+      if (err) {
+        console.log(err)
+        res.status(500).send("Server error.")
+        return
+      }
+      console.log(results)
+      res.status(200).send({token})
+    })
+  })
+})
+
 app.post("/sendEmail", (req, res) => {
   crypto.randomBytes(32, (err, buffer) => {
     if (err) {
@@ -323,6 +342,30 @@ app.post("/sendEmail", (req, res) => {
 app.get("/resetCheck", (req, res) => {
   db.query("Select * from users where token = ?",
     [req.query.token], (err, results) => {
+      if (err) {
+        console.log(err)
+        res.status(500).send("Server error.")
+        return
+      }
+      res.status(200).json(results)
+    })
+})
+
+app.get("/activateCheck", (req, res) => {
+  db.query("Select * from users where validToken = ?",
+    [req.query.token], (err, results) => {
+      if (err) {
+        console.log(err)
+        res.status(500).send("Server error.")
+        return
+      }   
+      res.status(200).json(results)
+    })
+})
+
+app.post("/updateValid", (req, res) => {
+  db.query("Update users set valid = 1 where id = ?",
+    [req.body.id], (err, results) => {
       if (err) {
         console.log(err)
         res.status(500).send("Server error.")
@@ -407,8 +450,8 @@ app.post("/signup", (req, res) => {
         res.status(401).send("username or email is already used.")
         return
       }
-      db.query("Insert into users (username, email, phone, password) values (?, ?, ?, ?)",
-        [usernameValue, emailValue, phoneValue, password], (err, results) => {
+      db.query("Insert into users (username, email, phone, password, valid) values (?, ?, ?, ?, ?)",
+        [usernameValue, emailValue, phoneValue, password, 0], (err, results) => {
           if (err) {
             console.log(err)
             return
@@ -424,7 +467,7 @@ app.post("/signup", (req, res) => {
 app.post("/signin", (req, res) => {
   const { username, password} = req.body
   console.log(req.body)
-  db.query("Select id, owner, restaurantId from users where username = ? and password = ?",
+  db.query("Select id, owner, restaurantId, valid from users where username = ? and password = ?",
     [username, password], (err, results) => {
       if (err) {
         console.log(err)
@@ -432,7 +475,12 @@ app.post("/signin", (req, res) => {
         return
       }
       if (results.length === 0) {
-        res.status(401).send("Cannot find relevant users")
+        res.status(400).send("Cannot find relevant users")
+        return
+      }
+      const {valid} = results[0]
+      if (!valid) { // !0
+        res.status(401).send("The account is not validated")
         return
       }
       res.status(200).json(results)
