@@ -490,11 +490,11 @@ app.post("/signin", (req, res) => {
 })
 
 app.post("/userOrder", (req, res) => {
-  const {userId, orderId, restaurant, clientTakeaway, clientTotal} = req.body
+  const {userId, orderId, restaurant, clientTakeaway, clientTotal, orderLat, orderLng, orderPhone, orderAddress} = req.body
   console.log(req.body)
   const date = new Date().toISOString().slice(0, 19).replace('T', ' ')
-  db.query("Insert into user_orders (user_id, order_id, order_date, restaurant, type, total, status) values (?, ?, ?, ?, ?, ?, ?)",
-    [userId, orderId, date, restaurant, clientTakeaway ? 1 : 0, clientTotal, "pending"], (err, results) => {
+  db.query("Insert into user_orders (user_id, order_id, order_date, restaurant, type, total, status, lat, lng, phone, address) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    [userId, orderId, date, restaurant, clientTakeaway ? 1 : 0, clientTotal, "pending", orderLat, orderLng, orderPhone, orderAddress], (err, results) => {
       if (err) {
         console.log(err)
         res.status(500).send("Server error.")
@@ -626,7 +626,7 @@ app.get("/getRegData", (req, res) => {
 })
 
 app.get("/getOrders", (req, res) => {
-  db.query("select o.*, uo.status, u.phone " + 
+  db.query("select o.*, uo.status, uo.phone, uo.address, uo.lat, uo.lng " + 
   "from order_items o " +
   "left join user_orders uo " +
   "using (order_id) " +
