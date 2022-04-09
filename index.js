@@ -632,7 +632,7 @@ app.get("/getOrders", (req, res) => {
   "using (order_id) " +
   "left join users u " +
   "on u.id = uo.user_id " +
-  "where u.restaurantId = ?",
+  "where o.restaurantId = ?",
     [req.query.id], (err, results) => {
       if (err) {
         console.log(err)
