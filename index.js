@@ -210,7 +210,8 @@ app.post("/uploadRegistration", (req, res) => {
           return
         }
       })
-      console.log(results)
+      insertId = results.insertId
+      res.status(200).json({insertId})
     }
   )
 })
@@ -630,7 +631,8 @@ app.get("/getOrders", (req, res) => {
   "left join user_orders uo " +
   "using (order_id) " +
   "left join users u " +
-  "on u.id = uo.user_id ",
+  "on u.id = uo.user_id " +
+  "where u.restaurantId = ?",
     [req.query.id], (err, results) => {
       if (err) {
         console.log(err)
